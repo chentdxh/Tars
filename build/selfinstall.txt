@@ -1,0 +1,148 @@
+yum install lrzsz
+yum install glibc-devel
+yum install gcc
+yum install gcc-c++ 
+tar zxvf cmake-2.8.8.tar.gz
+cd cmake-2.8.8
+./bootstrap
+make
+make install
+cd 
+
+##安装resin
+mv resin-4.0.49.tar.gz /usr/local/
+tar zxvf resin-4.0.49.tar.gz
+ln -s resin-4.0.49 resin
+cd 
+
+##安装mysql
+yum install -y ncurses-devel
+yum install -y zlib-devel
+mv mysql-5.6.26.tar.gz /usr/local/
+tar zxvf mysql-5.6.26.tar.gz
+cd /usr/local/mysql-5.6.26
+cmake . -DCMAKE_INSTALL_PREFIX=/usr/local/mysql-5.6.26 -DWITH_INNOBASE_STORAGE_ENGINE=1 -DMYSQL_USER=mysql -DDEFAULT_CHARSET=utf8 -DDEFAULT_COLLATION=utf8_general_ci
+make
+make install
+groupadd mysql
+useradd -g mysql mysql
+chown mysql:mysql ../mysql-5.6.26
+ln -s /usr/local/mysql-5.6.26 /usr/local/mysql
+
+yum install perl
+rm -rf /usr/local/mysql/data
+mkdir -p /data/mysql-data
+ln -s /data/mysql-data /usr/local/mysql/data
+chown -R mysql:mysql /data/mysql-data /usr/local/mysql/data
+ 
+cp support-files/mysql.server /etc/init.d/mysql
+##如果/etc/目录下有my.cnf存在，需要把这个配置删除了**
+rm /etc/my.cnf
+
+cd /usr/local/mysql-5.6.26
+yum install -y perl-Module-Install.noarch
+perl scripts/mysql_install_db --user=mysql
+cd -
+
+sed -i "s/192.168.2.131/${MachineIp}/g" `grep 192.168.2.131 -rl ./conf/*`
+cp ./conf/my.cnf /usr/local/mysql/
+
+cd /etc/init.d
+chmod u+x mysql
+##启动mysql
+service mysql start
+chkconfig mysql on
+##结束mysql
+service mysql stop
+
+##添加mysql的bin路径
+echo "PATH=\$PATH:/usr/local/mysql/bin" >> /etc/profile
+echo "export PATH" >> /etc/profile
+source /etc/profile
+
+cd /usr/local/mysql/
+./bin/mysqladmin -u root password 'root@appinside'
+./bin/mysqladmin -u root -h ${MachineName} password 'root@appinside'
+cd -
+
+##添加mysql的库路径
+echo "/usr/local/mysql/lib/" >> /etc/ld.so.conf
+ldconfig
+
+cd 
+git clone https://github.com/chentdxh/TarsFramework.git
+##安装c++语言框架
+cd ../TarsFramework/build/
+chmod u+x build.sh
+./build.sh all
+## 根据mysql 库路径 配置 设置framework/CMakeLists.txt tarscpp/CMakeList.txt
+ sed -i "s@/usr/local/mysql/include@${MysqlIncludePath}@g" ../TarsFramework/CMakeLists.txt
+ sed -i "s@/usr/local/mysql/lib@${MysqlLibPath}@g" ../TarsFramework/CMakeLists.txt
+ sed -i "s@/usr/local/mysql/include@${MysqlIncludePath}@g" ../TarsFramework/tarscpp/CMakeLists.txt
+ sed -i "s@/usr/local/mysql/lib@${MysqlLibPath}@g" ../TarsFramework/tarscpp/CMakeLists.txt
+./build.sh install
+cd -
+
+##Tars数据库环境初始化
+mysql -uroot -proot@appinside -e "grant all on *.* to 'tars'@'%' identified by 'tars2015' with grant option;"
+mysql -uroot -proot@appinside -e "grant all on *.* to 'tars'@'localhost' identified by 'tars2015' with grant option;"
+mysql -uroot -proot@appinside -e "grant all on *.* to 'tars'@'${MachineName}' identified by 'tars2015' with grant option;"
+mysql -uroot -proot@appinside -e "flush privileges;"
+
+cd ../TarsFramework/sql/
+sed -i "s/192.168.2.131/${MachineIp}/g" `grep 192.168.2.131 -rl ./*`
+sed -i "s/db.tars.com/${MachineIp}/g" `grep db.tars.com -rl ./*`
+chmod u+x exec-sql.sh
+./exec-sql.sh
+cd -
+
+##打包框架基础服务
+cd ../TarsFramework/build/
+make framework-tar
+
+make tarsstat-tar
+make tarsnotify-tar
+make tarsproperty-tar
+make tarslog-tar
+make tarsquerystat-tar
+make tarsqueryproperty-tar
+cd -
+
+##安装核心基础服务
+mkdir -p /usr/local/app/tars/
+cd ../framework/build/
+cp framework.tgz /usr/local/app/tars/
+cd /usr/local/app/tars
+tar xzfv framework.tgz
+
+sed -i "s/192.168.2.131/${MachineIp}/g" `grep 192.168.2.131 -rl ./*`
+sed -i "s/db.tars.com/${MachineIp}/g" `grep db.tars.com -rl ./*`
+sed -i "s/registry.tars.com/${MachineIp}/g" `grep registry.tars.com -rl ./*`
+sed -i "s/web.tars.com/${MachineIp}/g" `grep web.tars.com -rl ./*`
+
+chmod u+x tars_install.sh
+./tars_install.sh
+
+./tarspatch/util/init.sh
+
+##安装nodejs环境
+wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
+source ~/.bashrc
+nvm install v8.11.3
+
+##安装web管理系统
+cd ../
+git clone https://github.com/chentdxh/TarsWeb.git
+cd TarsWeb
+npm install -g pm2 --registry=https://registry.npm.taobao.org
+sed -i "s/registry.tars.com/${MachineIp}/g" `grep registry1.tars.com -rl ./config/*`
+sed -i "s/db.tars.com/${MachineIp}/g" `grep db.tars.com -rl ./config/*`
+npm install --registry=https://registry.npm.taobao.org
+npm run prd
+
+cd -
+
+mkdir -p /data/log/tars/
+
+
+
