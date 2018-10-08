@@ -1,7 +1,22 @@
+PWD_DIR=`pwd`
+MachineIp=
+MachineName=
+MysqlIncludePath=
+MysqlLibPath=
+
 yum install lrzsz
+
+##安装glibc-devel
 yum install glibc-devel
+
+##安装flex、bison
+yum install -y flex bison
+
+
 yum install gcc
 yum install gcc-c++ 
+
+##安装cmake
 tar zxvf cmake-2.8.8.tar.gz
 cd cmake-2.8.8
 ./bootstrap
@@ -60,6 +75,7 @@ echo "PATH=\$PATH:/usr/local/mysql/bin" >> /etc/profile
 echo "export PATH" >> /etc/profile
 source /etc/profile
 
+##修改mysql root密码
 cd /usr/local/mysql/
 ./bin/mysqladmin -u root password 'root@appinside'
 ./bin/mysqladmin -u root -h ${MachineName} password 'root@appinside'
