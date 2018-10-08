@@ -18,12 +18,13 @@ yum install gcc-c++
 
 ##安装cmake
 cd
+mv cmake-2.8.8.tar.gz /usr/local
+cd /usr/local
 tar zxvf cmake-2.8.8.tar.gz
 cd cmake-2.8.8
 ./bootstrap
 make
 make install
-
 
 ##安装resin
 cd 
@@ -64,7 +65,7 @@ perl scripts/mysql_install_db --user=mysql
 cd -
 
 ##修改my.cnf
-##vim /usr/local/mysql/my.cnf
+##vi /usr/local/mysql/my.cnf
 
 cd /etc/init.d
 chmod u+x mysql
@@ -93,20 +94,21 @@ ldconfig
 ##安装jdk
 cd /usr
 mkdir java
-cd 
-mv jdk-8u111-linux-x64.tar.gz jdk-8u111-linux-x64.tar.gz
+mv jdk-8u111-linux-x64.tar.gz /usr/java
+cd /usr/java
 tar zxvf jdk-8u111-linux-x64.tar.gz
 
 ##安装maven
-cd 
+cd
 mv apache-maven-3.3.9-bin.tar.gz /usr/local
+cd /usr/local
 tar zxvf apache-maven-3.3.9-bin.tar.gz
 
 ##修改/etc/profile
 
-git clone https://github.com/chentdxh/TarsFramework.git
 ##安装c++语言框架
 cd 
+git clone https://github.com/chentdxh/TarsFramework.git
 cd TarsFramework/build/
 chmod u+x build.sh
 ./build.sh prepare
@@ -121,7 +123,6 @@ mkdir tars
 chown ${普通用户}:${普通用户} ./tars/
 cd /root/TarsFramework/build/
 ./build.sh install
-
 
 cd -
 
@@ -192,6 +193,5 @@ npm run prd
 cd -
 
 mkdir -p /data/log/tars/
-
 
 
