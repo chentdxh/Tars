@@ -12,7 +12,7 @@ yum install glibc-devel
 ##安装flex、bison
 yum install -y flex bison
 
-
+##安装gcc
 yum install gcc
 yum install gcc-c++ 
 
@@ -78,17 +78,13 @@ chkconfig mysql on
 service mysql stop
 
 ##修改profile
-cd
 rm -rf /etc/profile
 mv /root/TarsPackage/profile /etc/
 
 ##修改mysql root密码
 service mysql start
-cd /etc/init.d
-mysqladmin -u root password 'root@appinside'
-mysql --user=root --password=root@appinside
-grant all privileges on *.* to 'root'@'%' identified by 'root@appinside';
-flush privileges;
+cd /usr/local/mysql/
+./bin/mysqladmin -u root password 'root@appinside'
 cd -
 
 ##添加mysql的库路径
@@ -109,7 +105,9 @@ cd /usr/local
 tar zxvf apache-maven-3.3.9-bin.tar.gz
 
 ##安装c++语言框架
-cd /root/TarsFramework/build/
+cd /root/
+git clone https://github.com/chentdxh/TarsFramework.git
+cd TarsFramework/build
 chmod u+x build.sh
 ./build.sh prepare
 ## 根据mysql 库路径 配置 设置framework/CMakeLists.txt tarscpp/CMakeList.txt
@@ -129,12 +127,15 @@ cd -
 ##Tars数据库环境初始化
 mysql -uroot -proot@appinside -e "grant all on *.* to 'tars'@'%' identified by 'tars2015' with grant option;"
 mysql -uroot -proot@appinside -e "grant all on *.* to 'tars'@'localhost' identified by 'tars2015' with grant option;"
-mysql -uroot -proot@appinside -e "grant all on *.* to 'tars'@'${MachineName}' identified by 'tars2015' with grant option;"
+mysql -uroot -proot@appinside -e "grant all on *.* to 'tars'@'127.0.0.1' identified by 'tars2015' with grant option;"
 mysql -uroot -proot@appinside -e "flush privileges;"
 
 cd /root/TarsFramework/sql/
 sed -i "s/192.168.2.131/${MachineIp}/g" `grep 192.168.2.131 -rl ./*`
 sed -i "s/db.tars.com/${MachineIp}/g" `grep db.tars.com -rl ./*`
+##sed -i "s/192.168.2.131/192.168.78.130/g" `grep 192.168.2.131 -rl ./*`
+##sed -i "s/db.tars.com/192.168.78.130/g" `grep db.tars.com -rl ./*`
+
 chmod u+x exec-sql.sh
 ./exec-sql.sh
 cd -
@@ -164,10 +165,10 @@ sed -i "s/db.tars.com/${MachineIp}/g" `grep db.tars.com -rl ./*`
 sed -i "s/registry.tars.com/${MachineIp}/g" `grep registry.tars.com -rl ./*`
 sed -i "s/web.tars.com/${MachineIp}/g" `grep web.tars.com -rl ./*`
 
-##sed -i "s/192.168.2.131/192.168.78.129/g" `grep 192.168.2.131 -rl ./*`
-##sed -i "s/db.tars.com/192.168.78.129/g" `grep db.tars.com -rl ./*`
-##sed -i "s/registry.tars.com/192.168.78.129/g" `grep registry.tars.com -rl ./*`
-##sed -i "s/web.tars.com/192.168.78.129/g" `grep web.tars.com -rl ./*`
+##sed -i "s/192.168.2.131/192.168.78.130/g" `grep 192.168.2.131 -rl ./*`
+##sed -i "s/db.tars.com/192.168.78.130/g" `grep db.tars.com -rl ./*`
+##sed -i "s/registry.tars.com/192.168.78.130/g" `grep registry.tars.com -rl ./*`
+##sed -i "s/web.tars.com/192.168.78.130/g" `grep web.tars.com -rl ./*`
 
 chmod u+x tars_install.sh
 ./tars_install.sh
@@ -176,17 +177,20 @@ chmod u+x tars_install.sh
 
 ##安装nodejs环境
 cd
+yum install wget
 wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
 source ~/.bashrc
 nvm install v8.11.3
 
 ##安装web管理系统
-cd ..
+cd /root/
 git clone https://github.com/chentdxh/TarsWeb.git
 cd /root/TarsWeb/
 npm install -g pm2 --registry=https://registry.npm.taobao.org
 sed -i "s/registry.tars.com/${MachineIp}/g" `grep registry1.tars.com -rl ./config/*`
 sed -i "s/db.tars.com/${MachineIp}/g" `grep db.tars.com -rl ./config/*`
+##sed -i "s/registry.tars.com/192.168.78.130/g" `grep registry1.tars.com -rl ./config/*`
+##sed -i "s/db.tars.com/192.168.78.130/g" `grep db.tars.com -rl ./config/*`
 npm install --registry=https://registry.npm.taobao.org
 npm run prd
 
