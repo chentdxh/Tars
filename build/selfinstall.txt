@@ -18,7 +18,7 @@ yum install gcc-c++
 
 ##安装cmake
 cd
-mv cmake-2.8.8.tar.gz /usr/local
+mv /root/TarsPackage/cmake-2.8.8.tar.gz /usr/local
 cd /usr/local
 tar zxvf cmake-2.8.8.tar.gz
 cd cmake-2.8.8
@@ -28,7 +28,7 @@ make install
 
 ##安装resin
 cd 
-mv resin-4.0.49.tar.gz /usr/local/
+mv /root/TarsPackage/resin-4.0.49.tar.gz /usr/local/
 cd /usr/local/
 tar zxvf resin-4.0.49.tar.gz
 ln -s resin-4.0.49 resin
@@ -38,7 +38,7 @@ cd
 yum install -y ncurses-devel
 yum install -y zlib-devel
 cd /usr/local/
-mv mysql-5.6.26.tar.gz /usr/local/
+mv /root/TarsPackage/mysql-5.6.26.tar.gz /usr/local/
 tar zxvf mysql-5.6.26.tar.gz
 cd /usr/local/mysql-5.6.26
 cmake . -DCMAKE_INSTALL_PREFIX=/usr/local/mysql-5.6.26 -DWITH_INNOBASE_STORAGE_ENGINE=1 -DMYSQL_USER=mysql -DDEFAULT_CHARSET=utf8 -DDEFAULT_COLLATION=utf8_general_ci
@@ -46,6 +46,7 @@ make
 make install
 groupadd mysql
 useradd -g mysql mysql
+
 chown mysql:mysql ../mysql-5.6.26
 ln -s /usr/local/mysql-5.6.26 /usr/local/mysql
 
@@ -65,7 +66,8 @@ perl scripts/mysql_install_db --user=mysql
 cd -
 
 ##修改my.cnf
-##vi /usr/local/mysql/my.cnf
+rm -rf /usr/local/mysql/my.cnf
+mv /root/TarsPackage/my.cnf /usr/local/mysql
 
 cd /etc/init.d
 chmod u+x mysql
@@ -75,16 +77,18 @@ chkconfig mysql on
 ##结束mysql
 service mysql stop
 
-##添加mysql的bin路径
+##修改profile
 cd
-echo "PATH=\$PATH:/usr/local/mysql/bin" >> /etc/profile
-echo "export PATH" >> /etc/profile
-source /etc/profile
+rm -rf /etc/profile
+mv /root/TarsPackage/profile /etc/
 
 ##修改mysql root密码
-cd /usr/local/mysql/
-./bin/mysqladmin -u root password 'root@appinside'
-./bin/mysqladmin -u root -h ${MachineName} password 'root@appinside'
+service mysql start
+cd /etc/init.d
+mysqladmin -u root password 'root@appinside'
+mysql --user=root --password=root@appinside
+grant all privileges on *.* to 'root'@'%' identified by 'root@appinside';
+flush privileges;
 cd -
 
 ##添加mysql的库路径
@@ -94,22 +98,18 @@ ldconfig
 ##安装jdk
 cd /usr
 mkdir java
-mv jdk-8u111-linux-x64.tar.gz /usr/java
+mv /root/TarsPackage/jdk-8u111-linux-x64.tar.gz /usr/java
 cd /usr/java
 tar zxvf jdk-8u111-linux-x64.tar.gz
 
 ##安装maven
 cd
-mv apache-maven-3.3.9-bin.tar.gz /usr/local
+mv /root/TarsPackage/apache-maven-3.3.9-bin.tar.gz /usr/local
 cd /usr/local
 tar zxvf apache-maven-3.3.9-bin.tar.gz
 
-##修改/etc/profile
-
 ##安装c++语言框架
-cd 
-git clone https://github.com/chentdxh/TarsFramework.git
-cd TarsFramework/build/
+cd /root/TarsFramework/build/
 chmod u+x build.sh
 ./build.sh prepare
 ## 根据mysql 库路径 配置 设置framework/CMakeLists.txt tarscpp/CMakeList.txt
